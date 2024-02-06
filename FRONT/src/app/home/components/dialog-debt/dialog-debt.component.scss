@@ -1,0 +1,19 @@
+.inputFile {
+    opacity: 0.0;
+    width: 0.1px;
+    height: 0.1px;
+    z-index: -1;
+    position: absolute;
+    overflow: hidden;
+
+}
+
+.inputFile + label {
+    border: 1px solid red;
+    background-color: red;
+    color: white;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+}

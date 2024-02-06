@@ -1,0 +1,56 @@
+<h2 matDialogTitle >{{ data !== null ? 'Editar Detalle ' + data.Description : 'Agregar Detalle'  }}</h2>
+<mat-dialog-content>
+    <div class="container">
+        <form [formGroup]="debtDetailForm">
+            <div class="row">
+                <div class="col-12 col-md-4">
+                    <mat-form-field>
+                        <mat-label>Descripción</mat-label>
+                        <input matInput formControlName="Description">
+                        <mat-error *ngIf="Controls.Description.errors?.['required']">Por favor ingrese una descripción</mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="col-12 col-md-4">
+                    <mat-form-field>
+                        <mat-label>Total</mat-label>
+                        <input matInput type="number" formControlName="Total">
+                        <mat-error *ngIf="Controls.RemainingPayments.errors?.['required']">El valor no puede estar vacio</mat-error>
+                        <mat-error *ngIf="Controls.RemainingPayments.errors?.['IsZero']">Por favor ingrese un valor mayor a cero</mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="col-12 col-md-4">
+                    <mat-form-field>
+                        <mat-label>Precio unitario</mat-label>
+                        <input matInput type="number" formControlName="UnitPrice">
+                        <mat-error *ngIf="Controls.UnitPrice.errors?.['required']">El valor no puede estar vacio</mat-error>
+                        <mat-error *ngIf="Controls.UnitPrice.errors?.['IsZero']">Por favor ingrese un valor mayor a cero</mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="col-12 col-md-4">
+                    <mat-form-field>
+                        <mat-label>Pagos restantes</mat-label>
+                        <input matInput type="number" formControlName="RemainingPayments">
+                    </mat-form-field>
+                </div>
+                <div class="col-12 col-md-4 mt-3">
+                    <mat-checkbox formControlName="IsPaid">Esta pagado</mat-checkbox>
+                </div>
+                <div class="col-12 col-md-4 mt-3">
+                    <mat-form-field>
+                        <mat-label>Fecha de pago</mat-label>
+                        <input matInput [matDatepicker]="picker" #inpPayDate formControlName="PaymentDate">
+                        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker (closed)="datePickerClose(inpPayDate)"></mat-datepicker>
+                        <mat-error *ngIf="Controls.PaymentDate.errors?.['required']">Por favor ingrese una fecha de pago</mat-error>
+                    </mat-form-field>
+                </div>
+            </div>
+        </form>
+    </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <div class="d-flex flex-row justify-content-end w-100">
+        <button type="button" mat-raised-button color="primary" (click)="close('save')">Aceptar</button>
+        <button type="button" mat-raised-button color="warn" (click)="close('close')">Cancelar</button>
+    </div>
+</mat-dialog-actions>
