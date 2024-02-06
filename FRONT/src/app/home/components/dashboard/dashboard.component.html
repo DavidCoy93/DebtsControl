@@ -1,0 +1,243 @@
+<div class="container-fluid">
+    <div class="row mt-2">
+        <div class="col-12 col-sm-12 col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h1>Total Deudas</h1>
+                </div>
+                <div class="card-body">
+                    <span>{{ TotalDebts  | currency }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-12 col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h1>Total Ingresos</h1>
+                </div>
+                <div class="card-body">
+                    <span>{{ "0" | currency }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-12 offset-md-9 col-md-3">
+            <mat-form-field style="width: 100%;" appearance="outline" color="primary">
+                <mat-label>Buscar Deudas</mat-label>
+                <input type="text" matInput [(ngModel)]="searchText">
+                <mat-icon matIconSuffix>search</mat-icon>
+            </mat-form-field>
+        </div>
+    </div>
+    <ng-container *ngIf="$BsDebtList | async as debts; else tmpNoDebts">
+        <div class="row mt-3" *ngIf="debts.length > 0; else tmpNoDebts">
+            <div class="col-12 col-md-4" *ngFor="let debt of debts | debtsFilter: searchText; index as i" [ngClass]="(!IsSmallScreen && i > 2) ? 'mt-2 mb-2' : 'mt-2'">
+                <mat-expansion-panel>
+                    <mat-expansion-panel-header [style]="(IsSmallScreen) ? { 'margin-top': '10px', 'height': '80px' } : null">
+                        <div class="container-fluid w-100">
+                            <div class="row w-100">
+                                <div class="col-12 col-md-4">
+                                    <img [src]="debt.Logo" *ngIf="debt.Logo !== ''" style="height: 32px; width: 32px; margin-right: 0.5em;">
+                                    <span>{{ debt.Name }}</span>
+                                </div>
+                                <div class="col-12 col-md-8">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="row">
+                                                <div class="col-12 col-md-6">
+                                                    <span><b>Total Mes</b></span>
+                                                </div>
+                                                <div class="col-12 col-md-6">
+                                                    <span>{{ debt.TotalMonth | currency }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="row">
+                                                <div class="col-12 col-md-8">
+                                                    <span><b>Total Detalles</b></span>
+                                                </div>
+                                                <div class="col-12 col-md-4">
+                                                    <span>{{debt.Details.length}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </mat-expansion-panel-header>
+                    <ng-container *ngIf="debt.Details.length > 0; else tmpNotDetail">
+                        <div class="card" *ngFor="let detail of debt.Details; index as indDet;">
+                            <div class="card-header">
+                                    <div class="row" >
+                                        <div class="col-10">
+                                            <h2>{{ detail.Description }}</h2>
+                                        </div>
+                                        <div class="col-2" *ngIf="detail.ShowDetails !== undefined">
+                                            <button mat-icon-button *ngIf="detail.ShowDetails; else tmpBtnHide" (click)="detail.ShowDetails = false" matTooltip="Ocultar Detalle">
+                                                <mat-icon>visibility_off</mat-icon>
+                                            </button>
+                                            <ng-template #tmpBtnHide>
+                                                <button mat-icon-button (click)="detail.ShowDetails = true" matTooltip="Mostrar Detalle">
+                                                    <mat-icon>visibility</mat-icon>
+                                                </button>
+                                            </ng-template>
+                                        </div>
+                                        <ng-container *ngIf="detail.ShowDetails !== undefined && !detail.ShowDetails">
+                                            <div class="col-6 col-md-4">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <span><b>Total</b></span>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <span>{{ detail.Total | currency }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-4">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <span><b>Precio</b></span>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <span>{{ detail.UnitPrice | currency }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 col-md-4">
+                                                <div class="row">
+                                                    <div class="col-12">
+                                                        <span><b>Pagos restantes</b></span>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <span>{{ detail.RemainingPayments }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </ng-container>
+                                    </div>
+                            </div>
+                            <div class="card-body" *ngIf="detail.ShowDetails !== undefined && detail.ShowDetails">
+                                <div class="container-fluid">
+                                    <div class="row" >
+                                        <div class="col-12 col-md-4" [ngClass]="IsSmallScreen ? 'mt-3' : ''">
+                                            <div class="row">
+                                                <div class="col-6 col-md-12">
+                                                    <span><b>Descripción</b></span>
+                                                </div>
+                                                <div class="col-6 col-md-12">
+                                                    <span>{{ detail.Description }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4" [ngClass]="IsSmallScreen ? 'mt-3' : ''">
+                                            <div class="row">
+                                                <div class="col-6 col-md-12">
+                                                    <span><b>Total</b></span>
+                                                </div>
+                                                <div class="col-6 col-md-12">
+                                                    <span>{{ detail.Total | currency }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4" [ngClass]="IsSmallScreen ? 'mt-3' : ''">
+                                            <div class="row">
+                                                <div class="col-6 col-md-12">
+                                                    <span><b>Importe</b></span>
+                                                </div>
+                                                <div class="col-6 col-md-12">
+                                                    <span>{{ detail.UnitPrice | currency }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4 mt-3">
+                                            <div class="row">
+                                                <div class="col-6 col-md-12">
+                                                    <span><b>Pagos restantes</b></span>
+                                                </div>
+                                                <div class="col-6 col-md-12">
+                                                    <span>{{ detail.RemainingPayments }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4 mt-3">
+                                            <div class="row">
+                                                <div class="col-6 col-md-12">
+                                                    <span><b>Estatus</b></span>
+                                                </div>
+                                                <div class="col-6 col-md-12">
+                                                    <span>{{ detail.IsPaid | debtStatus  }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4 mt-3">
+                                            <div class="row">
+                                                <div class="col-6 col-md-12">
+                                                    <span><b>Fecha de Pago</b></span>
+                                                </div>
+                                                <div class="col-6 col-md-12">
+                                                    <span>{{ detail.PaymentDate | date:'dd/MM/yyyy'  }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4 mt-3">
+                                            <div class="row">
+                                                <div class="col-6 col-md-12">
+                                                    <span><b>Acciones</b></span>
+                                                </div>
+                                                <div class="col-6 col-md-12">
+                                                    <ng-container *ngIf="debt.Index !== undefined && detail.indexDet !== undefined">
+                                                        <button mat-icon-button (click)="addUpdateDetailDebt(debt.Index, 'update', detail.indexDet, detail)" [matTooltip]="'Editar Detall ' + detail.Description">
+                                                            <mat-icon>edit</mat-icon>
+                                                        </button>
+                                                    </ng-container>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="container-fluid mt-3" *ngIf="debt.Index !== undefined">
+                            <div class="row">
+                                <ng-container *ngTemplateOutlet="tmpAddButton;context:{$implicit: debt.Index}"></ng-container>
+                            </div>
+                        </div>
+                    </ng-container>
+                    <ng-template #tmpNotDetail>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="alert alert-info" role="alert">
+                                    <h2>No hay detalles en este momento</h2>
+                                </div>
+                            </div>
+                            <ng-container *ngTemplateOutlet="tmpAddButton;context:{$implicit: debt.Index}"></ng-container>
+                        </div>
+                    </ng-template>
+                </mat-expansion-panel>
+            </div>
+        </div>
+    </ng-container>
+    <ng-template #tmpNoDebts>
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="alert alert-info" role="alert">
+                    <h2>No se encontraron deudas</h2>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template #tmpAddButton let-indice>
+        <div class="col-12 offset-md-4 col-md-4">
+            <button mat-raised-button color="primary" (click)="addUpdateDetailDebt(indice, 'create', 0)" style="width: 100%;">
+                <mat-icon>add</mat-icon> Agregar Detalle
+            </button>
+        </div>
+    </ng-template>
+    <button mat-fab [ngClass]="!IsSmallScreen ? 'addButton' : 'addButtonSmall'" (click)="AddEditDebt()">
+        <mat-icon>add</mat-icon>
+    </button>
+</div>

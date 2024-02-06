@@ -1,0 +1,75 @@
+<h2 matDialogTitle>Agregar Deuda</h2>
+<mat-dialog-content>
+    <div class="container">
+        <div class="row">
+            <div class="col-12 col-md-4">
+                <mat-form-field class="w-100">
+                    <mat-label>Nombre de la empresa</mat-label>
+                    <input matInput [formControl]="controls.Name">
+                </mat-form-field>
+            </div>
+            <div class="col-12 col-md-4">
+                <input type="file" id="logo" name="logo" class="inputFile" #inpLogo (change)="selectLogo(inpLogo)">
+                <label for="logo">
+                    <div class="d-flex flex-row justify-content-center align-content-center flex-wrap" style="width: 100%; height: 100%;">
+                        <div class="d-flex flex-column justify-content-center align-content-center">
+                            <span>Seleccionar logotipo</span>
+                            <img src="/assets/upload-icon.png" style="height: fit-content; width: fit-content;">
+                        </div>
+                    </div>
+                </label>
+            </div>
+            <div class="col-12 col-md-4" *ngIf="controls.Logo.value !== ''">
+                <div class="d-flex flex-row justify-content-center align-content-center flex-wrap" style="width: 100%; height: 100%;">
+                    <div class="d-flex flex-column justify-content-center align-items-center">
+                        <img [src]="controls.Logo.value" alt=""  style="height: auto; max-width: 33.33333333%;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" *ngIf="controls.Details.getRawValue().length > 0; else tmpNotDet">
+            <div class="col-12">
+                <table class="table table-responsive table-striped text-center">
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Pagos restantes</th>
+                            <th>Importe</th>
+                            <th>Estatus</th>
+                            <th>Fecha de Pago</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let detail of controls.Details.getRawValue()">
+                            <td>{{ detail.Description }}</td>
+                            <td>{{ detail.RemainingPayments }}</td>
+                            <td>{{ detail.UnitPrice | currency }}</td>
+                            <td>{{ detail.IsPaid | debtStatus  }}</td>
+                            <td>{{ detail.PaymentDate | date:'dd/MM/yyyy'  }}</td>
+                            <td><b>{{ (detail.RemainingPayments * detail.UnitPrice) | currency  }}</b></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <ng-template #tmpNotDet>
+            <div class="row mt-3" *ngIf="controls.Name.valid && controls.Logo.valid">
+                <div class="col-12">
+                    <div class="alert alert-warning">Aun no se han agregado detalles</div>
+                </div>
+                <div class="col-12">
+                    <button mat-raised-button color="primary" type="button" (click)="openDetailDialog()">
+                        <mat-icon>add</mat-icon> Agregar Detalle
+                    </button>
+                </div>
+            </div>
+        </ng-template>
+    </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+    <div class="d-flex flex-row justify-content-end" style="width: 100%;">
+        <button mat-raised-button color="primary" type="button" (click)="closeDialog('save')" [disabled]="!debtForm.valid">Aceptar</button>
+        <button mat-raised-button color="warn" type="button" (click)="closeDialog('cancel')">Cancelar</button>
+    </div>
+</mat-dialog-actions>
