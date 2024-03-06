@@ -21,6 +21,8 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DebtsFilterPipe } from './pipes/debts-filter.pipe';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { DebtDetailsPipe } from './pipes/debt-details.pipe';
 
 @NgModule({
   declarations: [
@@ -31,7 +33,8 @@ import { DebtsFilterPipe } from './pipes/debts-filter.pipe';
     DebtStatusPipe,
     DialogDebtComponent,
     DialogDebtDetailComponent,
-    DebtsFilterPipe
+    DebtsFilterPipe,
+    DebtDetailsPipe,
   ],
   imports: [
     CommonModule,
@@ -48,7 +51,8 @@ import { DebtsFilterPipe } from './pipes/debts-filter.pipe';
     MatCheckboxModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatPaginatorModule
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: 'es-MX' }

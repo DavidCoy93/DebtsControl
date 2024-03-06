@@ -19,7 +19,7 @@ export class DebtService {
     return this.http.post<Array<EnterpriceItem>>(`${environment.UrlApi}/debts/CreateDebt`, debt);
   }
 
-  AddUpdateDetailDebt(Detail: EnterpriceDetailItem, IndexDebt: number, IndexDetail: number, Action: string): Observable<boolean> {
-    return this.http.put<boolean>(`${environment.UrlApi}/debts/UpdateDetailDebt/${IndexDebt}/${IndexDetail}/${Action}`, Detail);
+  AddUpdateDetailDebt(Detail: EnterpriceDetailItem, IndexDebt: number, IndexDetail: number, Action: string): Observable<Array<EnterpriceDetailItem>> {
+    return this.http.put<Array<EnterpriceDetailItem>>(`${environment.UrlApi}/debts/UpdateDetailDebt/${IndexDebt}/${IndexDetail}/${Action}`, Detail);
   }
 }
