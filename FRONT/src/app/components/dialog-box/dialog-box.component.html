@@ -1,0 +1,17 @@
+<h2 mat-dialog-title [ngStyle]="(data.Type === 'message') ? { 'color': 'blue'  } : (data.Type === 'confirm') ? {'color': 'goldenrod'} : {'color': 'red'}">
+    <ng-container [ngSwitch]="data.Type">
+        <mat-icon *ngSwitchCase="'message'">info</mat-icon> 
+        <mat-icon *ngSwitchCase="'confirm'">warning</mat-icon> 
+        <mat-icon *ngSwitchCase="'error'">cancel</mat-icon> 
+    </ng-container>
+    {{data.Title}}
+</h2>
+<div mat-dialog-content>
+    <span><b>{{ data.Message }}</b></span>
+</div>
+<div mat-dialog-actions>
+    <div class="d-flex flex-row align-items-start" style="width: 100%;">
+        <button mat-raised-button color="primary" (click)="close(true)" [ngStyle]="(data.Type === 'confirm') ? { 'width': '50%' } : { 'width': '100%' }">Aceptar</button>
+        <button mat-raised-button color="warn" style="width: 50%;" (click)="close(false)" *ngIf="data.Type === 'confirm'">Cancelar</button>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-import { Component, Injector, OnInit } from '@angular/core';
+import { Component, Injector, OnInit, WritableSignal, signal } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { EnterpriceDetailItem, EnterpriceItem } from 'src/app/models/debts-item';
 import { DebtService } from 'src/app/services/debt.service';
@@ -8,6 +8,9 @@ import { DialogDebtComponent } from '../dialog-debt/dialog-debt.component';
 import { DialogDebtDetailComponent } from '../dialog-debt-detail/dialog-debt-detail.component';
 import { CommonService } from 'src/app/services/common.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DialogBoxComponent } from 'src/app/components/dialog-box/dialog-box.component';
+import { DialogBoxItem } from 'src/app/models/dialog-box-item';
+import { PageEvent } from '@angular/material/paginator';
 
 @Component({
   selector: 'app-dashboard',
@@ -24,7 +27,10 @@ export class DashboardComponent implements OnInit {
   homeComponent: HomeComponent;
   IsSmallScreen: boolean = false;
   Today: Date = new Date();
-  searchText: string = "";
+  searchText: WritableSignal<string> = signal("");
+  pageSizeOptions: Array<number> = [3,6,9,12,15,18,21,24,27,30];
+  isPaid: boolean = false;
+  showOnlyPendingCredits: WritableSignal<boolean> = signal(false);
 
   constructor(
       private _debtsService: DebtService,
@@ -45,22 +51,63 @@ export class DashboardComponent implements OnInit {
       {
         next: (val) => {
           this.TotalDebts = 0;
+          const nextMonth: Date = new Date(this.Today.getFullYear(), this.Today.getMonth() + 1, 1, 0, 0, 0, 0)
           val.forEach((de, i, ei) => {
             de.Index = i;
-            de.TotalMonth = 0
+            de.TotalMonth = 0;
+            de.TotalNextMonth = 0;
+            de.Paginator = {
+              start: 0,
+              end: 2,
+              pageIndex: 0,
+              itemsPage: 3
+            }
+            if (typeof de.showOnlyPendingCredits === 'undefined') {
+              de.showOnlyPendingCredits = signal(false);
+            }
+
             de.Details.forEach((det, ind, detArr) => {
               det.ShowDetails = false;
               det.indexDet = ind;
-              if (typeof de.TotalMonth === 'number') {
-                de.TotalMonth += (det.RemainingPayments > 0) ? det.UnitPrice : 0;
-              }
-              this.TotalDebts += (det.RemainingPayments * det.UnitPrice);
-              if (typeof det.PaymentDate === 'string') {
-                const payDate: Date = new Date(det.PaymentDate);
-                if (this.Today.getTime() > payDate.getTime() && det.RemainingPayments > 0) {
-                  const nextPayDate: Date = this.calculateNextExactPaymentDate(payDate);
+
+              if (typeof det.PaymentDate === 'string' && typeof de.TotalMonth === 'number' && typeof de.TotalNextMonth === 'number') {
+                const registeredPayDate: Date = new Date(det.PaymentDate);
+
+
+                if (this.Today.getTime() > registeredPayDate.getTime()) {
+                  const nextPayDate: Date = this.calculateNextExactPaymentDate(registeredPayDate);
                   det.PaymentDate = nextPayDate.toJSON();
+
+                  const isLessThanCurrentDate: boolean = (this.Today.getTime()  > nextPayDate.getTime());
+                  const differenceMonth: number = nextPayDate.getMonth() - registeredPayDate.getMonth();
+
+                  let currentRemainingPayments = det.RemainingPayments - (differenceMonth);
+
+                  currentRemainingPayments = (isLessThanCurrentDate) ? (currentRemainingPayments - 1) : currentRemainingPayments;
+
+                  const isLessOrEqualToZero: boolean = (currentRemainingPayments <= 0);
+
+                  det.RemainingPayments = (isLessOrEqualToZero) ? 0 : currentRemainingPayments;
+                  det.Total = (det.UnitPrice * det.RemainingPayments);
+
+                  if (det.RemainingPayments > 0 ) {
+
+                    if (nextPayDate.getTime() > this.Today.getTime()) {
+                      de.TotalNextMonth += det.UnitPrice;
+                      de.TotalMonth += det.UnitPrice;
+                    } else {
+                      de.TotalNextMonth += det.UnitPrice;
+                    }
+                  } 
+
+                } else if (registeredPayDate.getTime() > nextMonth.getTime()) {
+                  de.TotalNextMonth += det.UnitPrice;
+                } else {
+                  de.TotalMonth += det.UnitPrice;
                 }
+
+                det.IsPaid = det.RemainingPayments === 0;
+                this.TotalDebts += det.Total;
               }
             })
           })
@@ -109,10 +156,9 @@ export class DashboardComponent implements OnInit {
       }
     })
   }
-
-
+  
   calculateNextExactPaymentDate(paymentDate: Date): Date {
-    const differenceMonths: number = (this.Today.getMonth() - paymentDate.getMonth()) === 0 ? 1 : (this.Today.getMonth() - paymentDate.getMonth()) ;
+    const differenceMonths = (this.Today.getMonth() - paymentDate.getMonth());
     const differenceYears: number = (this.Today.getFullYear() - paymentDate.getFullYear());
     const possiblePaymentDate = new Date((paymentDate.getFullYear() + differenceYears), (paymentDate.getMonth() + differenceMonths), paymentDate.getDate(),23,59,59,999);
     const isALeapYear: boolean = (possiblePaymentDate.getFullYear() % 4) === 0;
@@ -142,17 +188,12 @@ export class DashboardComponent implements OnInit {
             this._debtsService.AddUpdateDetailDebt(result, IndexDebt, IndexDetail, Action).subscribe(
               {
                 next: (resp) => {
-                  if (resp) {
-                    let debtList = this.$BsDebtList.getValue();
 
-                    if (Action === 'update') {
-                      debtList[IndexDebt].Details[IndexDetail] = result;
-                    } else{
-                      debtList[IndexDebt].Details.push(result);
-                    }
+                  let debtList = this.$BsDebtList.getValue();
 
-                    this.$BsDebtList.next(debtList);
-                  }
+                  debtList[IndexDebt].Details = resp;
+
+                  this.$BsDebtList.next(debtList);
                 },
                 error: (err: HttpErrorResponse) => {
                   alert(err.message);
@@ -164,4 +205,65 @@ export class DashboardComponent implements OnInit {
       }
     })
   }
+
+  payMonthDetail(indDebt: number, indDetail: number): void {
+    this.dialog.open<DialogBoxComponent, DialogBoxItem, boolean>(DialogBoxComponent, 
+      {
+        data: { Title: "Esta a punto de cagarla", Message: "¿Esta seguro que ya pago la mensualidad?", Type: 'confirm' },
+        width: '300px',
+        height: '200px',
+        hasBackdrop: true,
+        disableClose: true
+      }
+    ).afterClosed().subscribe(result => {
+      if (typeof result === 'boolean' && result) {
+        let debtList = this.$BsDebtList.getValue();
+        let detail = debtList[indDebt].Details[indDetail];
+        detail.Total = detail.Total - detail.UnitPrice;
+        detail.RemainingPayments = Number((detail.Total / detail.UnitPrice).toFixed(0));
+        debtList[indDebt].Details[indDetail] = detail;
+
+        this.$BsDebtList.next(debtList);
+      }
+    })
+  }
+
+  onDragDetail(evt: DragEvent, indDebt?: number, indDet?: number): void {
+    console.log("agarra puras mamadas");
+  }
+  
+  changePage(pageEvt: PageEvent, debt: EnterpriceItem): void {
+
+    const startPage: number = (pageEvt.pageSize * pageEvt.pageIndex);
+    const endloop: number =  (startPage + pageEvt.pageSize) - 1;
+
+    if (typeof debt.Paginator === 'object') {
+      debt.Paginator.pageIndex = pageEvt.pageIndex;
+      debt.Paginator.itemsPage = pageEvt.pageSize;
+      debt.Paginator.start = startPage;
+      debt.Paginator.end = (endloop >= debt.Details.length) ? debt.Details.length - 1 : endloop;
+    }
+  }
+
+  filterDetails(value: boolean, indeXDebt?: number): void {
+    if (typeof indeXDebt === 'number') {
+      let debtList: Array<EnterpriceItem> = this.$BsDebtList.getValue();
+      let debt: EnterpriceItem = debtList[indeXDebt];
+      if (value) {
+        const allDetails: Array<EnterpriceDetailItem> = debt.Details;
+        const allDetailsStr: string = JSON.stringify(allDetails);
+        
+        sessionStorage.setItem(`detailsInd${indeXDebt}`, allDetailsStr);
+  
+        const filteredDetails: Array<EnterpriceDetailItem> = allDetails.filter(x => x.IsPaid === false);
+        debt.Details = filteredDetails;
+      } else {
+        const allDetailsStr = sessionStorage.getItem(`detailsInd${indeXDebt}`) || '';
+        const allDetails = JSON.parse(allDetailsStr) as Array<EnterpriceDetailItem>;
+        debt.Details = allDetails;
+      }
+      this.$BsDebtList.next(debtList);
+    }
+  }
+
 }

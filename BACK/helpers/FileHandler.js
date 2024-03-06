@@ -65,16 +65,12 @@ exports.CreateDebt = (debt) => {
  * @param {number} indexDebt Indice de la deuda
  * @param {string} action Acción a realizar
  * @param {number} IndexDetail Indice del detalle en el listado de detalles de la deuda
- * @returns {Promise<boolean>} 
+ * @returns {Promise<any[]>} 
  */
 exports.UpdateAddDebtDetail = (detail, indexDebt, action, IndexDetail) => {
     return new Promise((resolve, reject) => {
         updateAddDebtDetail(detail, indexDebt, action, IndexDetail).then((result) => {
-            if (result) {
-                resolve(result);
-            } else {
-                reject("No se pudo actualizar el detalle de la deuda");
-            }
+            resolve(result);
         }).catch((err) => {
             reject(err);
         })
@@ -193,7 +189,7 @@ function getTypedObject(obj) {
  * @param {number} indexDebt 
  * @param {string} action
  * @param {number} IndexDetail
- * @returns {Promise<boolean>}
+ * @returns {Promise<any[]>}
  */
 const updateAddDebtDetail = (debtDetail, indexDebt, action, IndexDetail) => {
     return new Promise(async (resolve, reject) => {
@@ -214,10 +210,10 @@ const updateAddDebtDetail = (debtDetail, indexDebt, action, IndexDetail) => {
                         } else if (action === 'create') {
                             debt.Details.push(debtDetail);
                         }
+                        
+                        await saveChangesInDebtJson(debtsList);
+                        resolve(debt.Details);
                     }
-                    
-                    const savedFile = await saveChangesInDebtJson(debtsList);
-                    resolve(savedFile);
                 } else {
                     reject("No se encontrarón deudas");
                 }
@@ -250,16 +246,16 @@ const debtJsonFileContent = () => {
 /**
  * Metodo para actualizar el contenido del archivo debts.json
  * @param {any[]} debtList 
- * @returns {Promise<boolean>} True si se guardaron los cambios correctamente
+ * @returns {Promise<void>} True si se guardaron los cambios correctamente
  */
 const saveChangesInDebtJson = (debtList) => {
 
     return new Promise((resolve, reject) => {
         fs.writeFile(path.join(rootPath, "files", "debts.json"), JSON.stringify(debtList), {encoding: "utf-8"}, (err) => {
             if (err === null) {
-                resolve(true)
+                resolve()
             } else {
-                resolve(false);
+                reject("Ocurrio un error al guardar los datos en el archivo debts.json");
             }
         })
     });

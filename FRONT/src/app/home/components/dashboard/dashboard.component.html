@@ -25,14 +25,14 @@
         <div class="col-12 offset-md-9 col-md-3">
             <mat-form-field style="width: 100%;" appearance="outline" color="primary">
                 <mat-label>Buscar Deudas</mat-label>
-                <input type="text" matInput [(ngModel)]="searchText">
+                <input type="text" matInput [ngModel]="searchText()" (ngModelChange)="searchText.set($event)">
                 <mat-icon matIconSuffix>search</mat-icon>
             </mat-form-field>
         </div>
     </div>
     <ng-container *ngIf="$BsDebtList | async as debts; else tmpNoDebts">
         <div class="row mt-3" *ngIf="debts.length > 0; else tmpNoDebts">
-            <div class="col-12 col-md-4" *ngFor="let debt of debts | debtsFilter: searchText; index as i" [ngClass]="(!IsSmallScreen && i > 2) ? 'mt-2 mb-2' : 'mt-2'">
+            <div class="col-12 col-md-4" *ngFor="let debt of debts | debtsFilter: searchText(); index as i" [ngClass]="(!IsSmallScreen && i > 2) ? 'mt-2 mb-2' : 'mt-2'">
                 <mat-expansion-panel>
                     <mat-expansion-panel-header [style]="(IsSmallScreen) ? { 'margin-top': '10px', 'height': '80px' } : null">
                         <div class="container-fluid w-100">
@@ -56,10 +56,10 @@
                                         <div class="col-6">
                                             <div class="row">
                                                 <div class="col-12 col-md-8">
-                                                    <span><b>Total Detalles</b></span>
+                                                    <span><b>Total Siguiente Mes</b></span>
                                                 </div>
                                                 <div class="col-12 col-md-4">
-                                                    <span>{{debt.Details.length}}</span>
+                                                    <span>{{debt.TotalNextMonth | currency}}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -68,12 +68,21 @@
                             </div>
                         </div>
                     </mat-expansion-panel-header>
-                    <ng-container *ngIf="debt.Details.length > 0; else tmpNotDetail">
-                        <div class="card" *ngFor="let detail of debt.Details; index as indDet;">
+                    <mat-paginator *ngIf="debt.Paginator !== undefined && debt.Details.length > 5" 
+                        [length]="debt.Details.length" 
+                        [disabled]="false" [pageSizeOptions]="pageSizeOptions" 
+                        (page)="changePage($event, debt)" 
+                        [showFirstLastButtons]="true"
+                        [pageIndex]="debt.Paginator.pageIndex"
+                        [pageSize]="debt.Paginator.itemsPage">
+                    </mat-paginator>
+                    <mat-checkbox *ngIf="debt.showOnlyPendingCredits !== undefined" color="primary" [ngModel]="debt.showOnlyPendingCredits()" (ngModelChange)="filterDetails($event, debt.Index)">Mostrar solamente los creditos pendientes</mat-checkbox>
+                    <ng-container *ngIf="debt.Details.length > 0 && debt.Paginator !== undefined; else tmpNotDetail">
+                        <div class="card" *ngFor="let detail of debt.Details | debtDetails: debt.Paginator.start: debt.Paginator.end;  index as indDet;" draggable="true" (dragleave)="onDragDetail($event, debt.Index, detail.indexDet)">
                             <div class="card-header">
                                     <div class="row" >
                                         <div class="col-10">
-                                            <h2>{{ detail.Description }}</h2>
+                                            <h2>{{ detail.Description }} <mat-icon *ngIf="detail.IsPaid" style="color: green;">check_circle</mat-icon></h2>
                                         </div>
                                         <div class="col-2" *ngIf="detail.ShowDetails !== undefined">
                                             <button mat-icon-button *ngIf="detail.ShowDetails; else tmpBtnHide" (click)="detail.ShowDetails = false" matTooltip="Ocultar Detalle">
@@ -112,7 +121,12 @@
                                                         <span><b>Pagos restantes</b></span>
                                                     </div>
                                                     <div class="col-12">
-                                                        <span>{{ detail.RemainingPayments }}</span>
+                                                        <span>{{ detail.RemainingPayments }} </span>
+                                                        <ng-container *ngIf="debt.Index !== undefined && detail.indexDet !== undefined">
+                                                            <button type="button" mat-icon-button (click)="payMonthDetail(debt.Index, detail.indexDet)" *ngIf="detail.RemainingPayments > 0">
+                                                                <mat-icon>remove</mat-icon> 
+                                                            </button>
+                                                        </ng-container>
                                                     </div>
                                                 </div>
                                             </div>
